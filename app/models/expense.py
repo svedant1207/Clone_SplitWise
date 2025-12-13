@@ -16,6 +16,8 @@ class Expense(db.Model):
         db.ForeignKey("users.id"),
         nullable=False
     )
+    
+    paid_by = db.relationship("User", foreign_keys=[paid_by_id])
 
     # When the expense was created
     created_at = db.Column(
