@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Friends{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Your Friends</h1>
+    <a href="{{ url_for('friends.add_friend') }}" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i>
+        &nbsp;Add Friend</a>
+</div>
+
+<div class="card">
+    {% if friends %}
+    <ul class="friend-list">
+        {% for friend in friends %}
+        <li class="flex justify-between items-center"
+            style="padding: 1rem 0; border-bottom: 1px solid var(--border-color);">
+            <div class="flex items-center gap-4">
+                <div
+                    style="width: 40px; height: 40px; background: #e0e7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-weight: 700;">
+                    {{ friend.name[0] | upper }}
+                </div>
+                <div>
+                    <span style="font-weight: 600; display: block;">{{ friend.name }}</span>
+                    <span class="text-muted" style="font-size: 0.85rem;">{{ friend.email }}</span>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="text-center py-5">
+        <p class="text-muted">You haven't added any friends yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

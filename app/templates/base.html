@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Clone_SplitWise{% endblock %} - Clone_SplitWise</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('auth.dashboard') }}" class="navbar-brand">
+            <i class="fa-solid fa-money-bill-transfer"></i> Clone_SplitWise
+        </a>
+        <div class="nav-links">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('auth.dashboard') }}" class="nav-link">Dashboard</a>
+            <a href="{{ url_for('friends.list_friends') }}" class="nav-link">Friends</a>
+            <a href="{{ url_for('expenses.list_expenses') }}" class="nav-link">Expenses</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Log Out</a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="nav-link">Log In</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Sign Up</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-info">
+            {{ message }}
+            <span onclick="this.parentElement.style.display='none'" style="cursor:pointer;"><i
+                    class="fa-solid fa-times"></i></span>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+
+</html>

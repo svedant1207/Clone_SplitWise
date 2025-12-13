@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Settle Up{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Settle Up</h1>
+    <a href="{{ url_for('auth.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+
+<div class="card">
+    {% if settlements %}
+    <ul class="settlement-list">
+        {% for item in settlements %}
+        <li class="flex justify-between items-center"
+            style="padding: 1rem 0; border-bottom: 1px solid var(--border-color);">
+            <div class="flex items-center gap-4">
+                {% if item.type == 'owe' %}
+                <div
+                    style="width: 40px; height: 40px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ef4444;">
+                    <i class="fa-solid fa-arrow-up"></i>
+                </div>
+                <div>
+                    <span style="font-weight: 600; display: block; color: #ef4444;">You owe {{ item.other_user.name
+                        }}</span>
+                </div>
+                {% else %}
+                <div
+                    style="width: 40px; height: 40px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #166534;">
+                    <i class="fa-solid fa-arrow-down"></i>
+                </div>
+                <div>
+                    <span style="font-weight: 600; display: block; color: #166534;">{{ item.other_user.name }} owes
+                        you</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center gap-4">
+                <span style="font-weight: 700; font-size: 1.2rem;">${{ item.amount }}</span>
+                {% if item.type == 'owe' %}
+                <form action="{{ url_for('settlements.make_payment', recipient_id=item.other_user.id) }}" method="POST"
+                    style="display:inline;">
+                    <input type="hidden" name="amount" value="{{ item.amount }}">
+                    <button type="submit" class="btn btn-primary btn-sm">Pay Now</button>
+                </form>
+                {% else %}
+                <button class="btn btn-secondary btn-sm" disabled>Waiting for payment</button>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="text-center py-5">
+        <p class="text-muted"><i class="fa-solid fa-check-circle"
+                style="color: var(--secondary); font-size: 2rem; margin-bottom: 1rem;"></i><br>You are all settled up!
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
