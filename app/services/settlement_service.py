@@ -10,40 +10,17 @@ class SettlementService:
           {"from": user_id, "to": user_id, "amount": x}
         ]
         """
-        balances = BalanceService.user_balances()
-
-        creditors = []  # users who should receive money
-        debtors = []    # users who owe money
-
-        # Separate creditors and debtors
-        for user_id, amount in balances.items():
-            if amount > 0:
-                creditors.append([user_id, amount])
-            elif amount < 0:
-                debtors.append([user_id, -amount])
-
+        debts = BalanceService.user_pairwise_debts()
+        
         settlements = []
-
-        i = j = 0
-        # Greedy settlement between debtors and creditors
-        while i < len(debtors) and j < len(creditors):
-            debtor_id, debt = debtors[i]
-            creditor_id, credit = creditors[j]
-
-            settle_amount = min(debt, credit)
-
-            settlements.append({
-                "from": debtor_id,
-                "to": creditor_id,
-                "amount": round(settle_amount, 2)
-            })
-
-            debtors[i][1] -= settle_amount
-            creditors[j][1] -= settle_amount
-
-            if debtors[i][1] == 0:
-                i += 1
-            if creditors[j][1] == 0:
-                j += 1
-
+        
+        for debtor_id, creditors in debts.items():
+            for creditor_id, amount in creditors.items():
+                if amount > 0:
+                    settlements.append({
+                        "from": debtor_id,
+                        "to": creditor_id,
+                        "amount": amount
+                    })
+                    
         return settlements
