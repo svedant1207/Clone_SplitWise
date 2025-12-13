@@ -5,6 +5,9 @@ from app.models.expense_split import ExpenseSplit
 class SplitService:
     @staticmethod
     def split_equal(expense, user_ids):
+        """
+        Split expense equally among given users.
+        """
         if not user_ids:
             raise ValueError("No users to split expense")
 
@@ -25,6 +28,9 @@ class SplitService:
 
     @staticmethod
     def split_exact(expense, splits_dict):
+        """
+        Split expense by exact amounts per user.
+        """
         total = round(sum(splits_dict.values()), 2)
 
         if total != round(expense.amount, 2):
@@ -45,6 +51,9 @@ class SplitService:
 
     @staticmethod
     def split_percentage(expense, percentage_dict):
+        """
+        Split expense based on percentage per user.
+        """
         total_percentage = sum(percentage_dict.values())
 
         if total_percentage != 100:

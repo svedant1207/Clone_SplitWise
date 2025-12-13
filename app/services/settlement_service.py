@@ -12,9 +12,10 @@ class SettlementService:
         """
         balances = BalanceService.user_balances()
 
-        creditors = []
-        debtors = []
+        creditors = []  # users who should receive money
+        debtors = []    # users who owe money
 
+        # Separate creditors and debtors
         for user_id, amount in balances.items():
             if amount > 0:
                 creditors.append([user_id, amount])
@@ -24,6 +25,7 @@ class SettlementService:
         settlements = []
 
         i = j = 0
+        # Greedy settlement between debtors and creditors
         while i < len(debtors) and j < len(creditors):
             debtor_id, debt = debtors[i]
             creditor_id, credit = creditors[j]
