@@ -29,18 +29,6 @@ A Splitwise-like expense sharing backend application built with Flask. This proj
 
 Follow these steps to get the project running locally on your machine.
 
-#### * Branch Checkout
-```bash
-
-# For cloning the repo
-git clone https://github.com/svedant1207/Clone_SplitWise.git
-cd Clone_SplitWise
-
-# Branch checkout
-git checkout final
-
-```
-
 #### 1. Clone & Environment Setup
 
 ```bash
