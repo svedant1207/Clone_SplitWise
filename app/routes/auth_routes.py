@@ -57,13 +57,52 @@ def login():
 def dashboard():
     from app.models.expense import Expense
     from app.models.expense_split import ExpenseSplit
-    
-    # Get recent expenses (limit 5)
-    recent_expenses = Expense.query.join(ExpenseSplit).filter(
-        ExpenseSplit.user_id == current_user.id
-    ).order_by(Expense.created_at.desc()).limit(5).all()
-    
-    return render_template("dashboard.html", user=current_user, recent_expenses=recent_expenses)
+    from app.services.balance_service import BalanceService
+
+    # Recent expenses (last 5 involving current user)
+    recent_expenses = (
+        Expense.query
+        .join(ExpenseSplit)
+        .filter(ExpenseSplit.user_id == current_user.id)
+        .order_by(Expense.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
+    # Get balances for all users
+    balances = BalanceService.user_balances()
+
+    # Current user's net balance
+    total_balance = balances.get(current_user.id, 0.0)
+
+    # Calculate owes / owed
+    you_owe = 0.0
+    you_are_owed = 0.0
+    owe_users = set()
+    owed_by_users = set()
+
+    for user_id, amount in balances.items():
+        if user_id == current_user.id:
+            continue
+
+        if amount < 0 and total_balance > 0:
+            you_are_owed += abs(amount)
+            owed_by_users.add(user_id)
+
+        elif amount > 0 and total_balance < 0:
+            you_owe += amount
+            owe_users.add(user_id)
+
+    return render_template(
+        "dashboard.html",
+        user=current_user,
+        recent_expenses=recent_expenses,
+        total_balance=round(total_balance, 2),
+        you_owe=round(you_owe, 2),
+        you_are_owed=round(you_are_owed, 2),
+        owe_count=len(owe_users),
+        owed_by_count=len(owed_by_users),
+    )
 
 
 @auth_bp.route("/logout")
