@@ -1,10 +1,6 @@
 # 🧾 Clone SplitWise 💸
 
-<<<<<<< HEAD
 A Splitwise-like expense sharing backend application built with Flask. This project allows users to manage shared expenses, split costs in various ways, and settle up balances.
-=======
-A Splitwise-like expense sharing backend built with Flask.
->>>>>>> origin/main
 
 -----
 
@@ -19,7 +15,6 @@ A Splitwise-like expense sharing backend built with Flask.
 
 ### 🚀 Features
 
-<<<<<<< HEAD
 *   **👤 User Management**: Register and authenticate users.
 *   **💸 Expense Creation**: Add expenses paid by a specific user.
 *   **➗ Flexible Splitting**: Support for Equal, Exact, and Percentage based splits.
@@ -33,6 +28,18 @@ A Splitwise-like expense sharing backend built with Flask.
 ### ⚙️ Setup & Installation
 
 Follow these steps to get the project running locally on your machine.
+
+#### * Branch Checkout
+```bash
+
+# For cloning the repo
+git clone https://github.com/svedant1207/Clone_SplitWise.git
+cd Clone_SplitWise
+
+# Branch checkout
+git checkout final
+
+```
 
 #### 1. Clone & Environment Setup
 
@@ -147,45 +154,3 @@ Clone_SplitWise/
 ├── requirements.txt    # Python dependencies
 └── run.py              # Entry point
 ```
-=======
-  * 👤 User management
-  * 💸 Expense creation
-  * ➗ Equal / Exact / Percentage splits
-  * 📊 Balance calculation
-  * 🔄 Optimized settlement logic
-  * 🧪 Fully unit tested (Pytest)
-  * 🔐 Simple login & logout (Flask templates)
-
------
-
-### ⚙️ Setup
-
-Follow these commands to get the project running locally:
-
-```bash
-# Create and activate the virtual environment
-python -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run tests
-pytest
-
-
-# Initialize the database (creates tables)
-if db is not working
-  rm splitwise.db
-then
-  python scripts/init_db.py
-
-# Seed the database with sample data (optional)
-python scripts/seed_db.py
-
-# Start the Flask server
-flask run
-```
-
------
->>>>>>> origin/main
