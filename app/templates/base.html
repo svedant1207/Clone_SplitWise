@@ -11,7 +11,8 @@
 
 <body>
     <nav class="navbar">
-        <a href="{{ url_for('auth.dashboard') }}" class="navbar-brand">
+        <a href="{% if current_user.is_authenticated %}{{ url_for('auth.dashboard') }}{% else %}{{ url_for('index') }}{% endif %}"
+            class="navbar-brand">
             <i class="fa-solid fa-money-bill-transfer"></i> Clone_SplitWise
         </a>
         <div class="nav-links">

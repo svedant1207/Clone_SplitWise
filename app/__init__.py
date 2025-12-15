@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from app.extensions import db, login_manager, migrate
 from config import Config
 from app.models.user import User
@@ -38,6 +38,10 @@ def create_app():
     app.register_blueprint(friend_bp)
 
     @app.route("/")
+    def index():
+        return send_from_directory("..", "index.html")
+
+    @app.route("/health")
     def health_check():
         return {"status": "ok"}
 

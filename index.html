@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clone_SplitWise - Simple Shared Expenses</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            /* Indigo 600 */
+            --secondary-color: #10b981;
+            /* Emerald 500 */
+            --primary-hover: #4338ca;
+            /* Indigo 700 */
+            --text-color: #0f172a;
+            /* Slate 900 */
+            --light-bg: #f8fafc;
+            /* Slate 50 */
+            --white: #ffffff;
+            --text-muted: #64748b;
+            /* Slate 500 */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--white);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Navigation */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background-color: var(--white);
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            /* shadow-sm */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-links .btn-primary:hover {
+            color: var(--white);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            /* radius-md */
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--white);
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        .navbar .btn-primary {
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            /* shadow-md */
+        }
+
+        .btn-secondary {
+            background-color: var(--white);
+            color: var(--text-color);
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4rem 5%;
+            background-color: var(--light-bg);
+            /* bg-body */
+            min-height: 80vh;
+        }
+
+        .hero-content {
+            max-width: 50%;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+        }
+
+        .hero-image {
+            max-width: 45%;
+        }
+
+        .hero-image i {
+            font-size: 20rem;
+            color: var(--primary-color);
+            opacity: 0.9;
+            display: block;
+            text-align: center;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 5%;
+            text-align: center;
+            background-color: var(--white);
+        }
+
+        .features h2 {
+            margin-bottom: 3rem;
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .feature-card {
+            padding: 2.5rem 2rem;
+            border-radius: 0.75rem;
+            /* radius-lg */
+            background-color: var(--white);
+            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            /* shadow-sm */
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            /* shadow-lg */
+            border-color: var(--primary-color);
+        }
+
+        .feature-card i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            background-color: #1e293b;
+            /* Slate 800 - darker specific for footer */
+            color: #f8fafc;
+            padding: 3rem 5%;
+            text-align: center;
+        }
+
+        footer p {
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .social-links a {
+            color: #fff;
+            margin: 0 0.75rem;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .social-links a:hover {
+            color: var(--primary-color);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 2rem;
+            }
+
+            .hero-content {
+                max-width: 100%;
+                margin-bottom: 3rem;
+            }
+
+            .hero-image {
+                max-width: 80%;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <i class="fa-solid fa-money-bill-transfer"></i> Clone_SplitWise
+        </a>
+        <div class="nav-links">
+            <a href="/login" class="btn btn-secondary">Log In</a>
+            <a href="/register" class="btn btn-primary" style="margin-left: 10px;">Sign Up</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Less stress when sharing expenses.</h1>
+            <p>Keep track of your shared expenses and balances with housemates, trips, groups, friends, and family.</p>
+            <a href="/register" class="btn btn-primary btn-lg">Get Started</a>
+        </div>
+        <div class="hero-image">
+            <!-- Using an icon as a placeholder for a hero image -->
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <h2>Features</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <i class="fa-solid fa-users"></i>
+                <h3>Groups & Friends</h3>
+                <p>Organize expenses by groups or individual friendships.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fa-solid fa-receipt"></i>
+                <h3>Track Expenses</h3>
+                <p>Add expenses and let us do the math for you.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+                <h3>Settle Up</h3>
+                <p>Pay back your friends easily and keep track of balances.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fa-solid fa-chart-pie"></i>
+                <h3>Dashboard</h3>
+                <p>View your total balance and owe/owed details at a glance.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Clone_SplitWise. All rights reserved.</p>
+    </footer>
+
+</body>
+
+</html>
