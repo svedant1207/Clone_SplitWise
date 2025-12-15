@@ -32,11 +32,10 @@ def get_engine_url():
         return str(get_engine().url).replace('%', '%%')
 
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-config.set_main_option('sqlalchemy.url', get_engine_url())
+# NOTE: THE PROBLEM LINE HAS BEEN REMOVED FROM HERE
+# The line 'config.set_main_option('sqlalchemy.url', get_engine_url())' 
+# has been removed from this section and moved into run_migrations_online() below.
+
 target_db = current_app.extensions['migrate'].db
 
 # other values from the config, defined by the needs of env.py,
@@ -79,6 +78,11 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    # ------------------- CRITICAL FIX APPLIED HERE -----------------------
+    # This forces Alembic to use the URI from the Flask application's config 
+    # (which correctly reads the POSTGRES_URL environment variable).
+    config.set_main_option('sqlalchemy.url', get_engine_url()) 
+    # ---------------------------------------------------------------------
 
     # this callback is used to prevent an auto-migration from being generated
     # when there are no changes to the schema
