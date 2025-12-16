@@ -3,54 +3,190 @@
 {% block title %}Edit Expense{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 600px; margin: 0 auto;">
+<div class="card" style="max-width: 800px; margin: 0 auto;">
     <h2 class="mb-4">Edit Expense</h2>
 
-    <form action="{{ url_for('expenses.edit_expense', expense_id=expense.id) }}" method="POST">
+    <form action="{{ url_for('expenses.edit_expense', expense_id=expense.id) }}" method="POST" id="expenseForm">
         <div class="form-group">
             <label for="title" class="form-label">Description</label>
             <input type="text" id="title" name="description" class="form-control" required
                 value="{{ expense.description }}" placeholder="e.g. Dinner at Tokyo Diner">
         </div>
 
-        <div class="form-group">
-            <label for="amount" class="form-label">Amount</label>
-            <div class="input-wrapper" style="position: relative;">
-                <span style="position: absolute; left: 1rem; top: 0.75rem; color: var(--text-muted);">$</span>
-                <input type="number" step="0.01" id="amount" name="amount" class="form-control"
-                    style="padding-left: 2rem;" required placeholder="0.00" value="{{ expense.amount }}">
+        <div class="form-group mb-4">
+            <label class="form-label d-block">Split Mode</label>
+
+            {% if items %}
+            <div class="alert alert-warning">
+                <strong>Note:</strong> Previous itemized data exists.
+                User assignments must be re-selected.
             </div>
+            {% else %}
+            <div class="alert alert-info">
+                Editing will reset previous splits.
+            </div>
+            {% endif %}
+
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="split_type_radio" id="split_equal" value="equal" {% if not
+                    items %}checked{% endif %}>
+                <label class="btn btn-outline-primary" for="split_equal">Split Equally</label>
+
+                <input type="radio" class="btn-check" name="split_type_radio" id="split_itemized" value="itemized" {% if
+                    items %}checked{% endif %}>
+                <label class="btn btn-outline-primary" for="split_itemized">Itemized Split</label>
+            </div>
+
+            <input type="hidden" name="split_type" id="split_type"
+                value="{% if items %}itemized{% else %}equal{% endif %}">
         </div>
 
-        <div class="form-group">
-            <label class="form-label">Split with</label>
-            <div class="friend-selection"
-                style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px;">
-                {% if friends %}
+        <!-- EQUAL SPLIT -->
+        <div id="equal-split-section" style="display: {% if items %}none{% else %}block{% endif %};">
+            <div class="form-group">
+                <label class="form-label">Amount</label>
+                <input type="number" step="0.01" id="amount" name="amount" class="form-control"
+                    value="{{ expense.amount }}" {% if items %}readonly{% else %}required{% endif %}>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Split with</label>
                 {% for friend in friends %}
-                <div class="form-check" style="margin-bottom: 0.5rem;">
-                    <input class="form-check-input" type="checkbox" name="friend_ids" value="{{ friend.id }}"
-                        id="friend_{{ friend.id }}" {% if friend.id in current_participant_ids %}checked{% endif %}>
-                    <label class="form-check-label" for="friend_{{ friend.id }}">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="friend_ids" value="{{ friend.id }}" {% if
+                        friend.id in current_participant_ids and not items %}checked{% endif %}>
+                    <label class="form-check-label">
                         {{ friend.name }} ({{ friend.email }})
                     </label>
                 </div>
                 {% endfor %}
-                {% else %}
-                <p class="text-muted small mb-0">No friends found.</p>
-                {% endif %}
             </div>
         </div>
 
-        <div class="alert alert-warning">
-            <i class="fa-solid fa-triangle-exclamation"></i> &nbsp;<strong>Note:</strong> Editing an expense will reset
-            the split equally among the selected friends.
+        <!-- ITEMIZED SPLIT -->
+        <div id="itemized-split-section" style="display: {% if items %}block{% else %}none{% endif %};">
+            <label class="form-label">Items</label>
+            <div id="items-container" class="mb-3"></div>
+
+            <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="add-item-btn">
+                Add Item
+            </button>
+
+            <div class="p-3 bg-light rounded mb-3">
+                <strong>Total Amount: $<span id="itemized-total">0.00</span></strong>
+            </div>
+
+            <input type="hidden" name="items_data" id="items_data">
         </div>
 
-        <div class="flex gap-4 mt-4">
-            <button type="submit" class="btn btn-primary">Update Expense</button>
-            <a href="{{ url_for('expenses.list_expenses') }}" class="btn btn-secondary">Cancel</a>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary" onclick="prepareSubmit(event)">
+                Update Expense
+            </button>
+            <a href="{{ url_for('expenses.list_expenses') }}" class="btn btn-secondary">
+                Cancel
+            </a>
         </div>
     </form>
 </div>
+
+<!-- ITEM TEMPLATE -->
+<template id="item-row-template">
+    <div class="item-row card p-3 mb-2">
+        <div class="d-flex justify-content-between">
+            <strong>Item <span class="item-index"></span></strong>
+            <button type="button" class="btn btn-sm btn-danger delete-item-btn">✕</button>
+        </div>
+
+        <input type="text" class="form-control item-name mt-2" placeholder="Item name" required>
+        <input type="number" step="0.01" class="form-control item-amount mt-2" placeholder="Amount" required>
+
+        <div class="mt-2">
+            <small>Shared by:</small><br>
+            {% for friend in friends %}
+            <label class="me-2">
+                <input type="checkbox" class="item-user-check" value="{{ friend.id }}"> {{ friend.name }}
+            </label>
+            {% endfor %}
+            <label>
+                <input type="checkbox" class="item-user-check" value="{{ current_user.id }}" checked> Me
+            </label>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // SAFE SERVER → JS DATA
+    const existingItems = {{ items | tojson | safe }};
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const itemsContainer = document.getElementById('items-container');
+        const addItemBtn = document.getElementById('add-item-btn');
+        const splitTypeInput = document.getElementById('split_type');
+
+        function createItemRow(name = '', amount = '') {
+            const tpl = document.getElementById('item-row-template').content.cloneNode(true);
+            const index = itemsContainer.children.length + 1;
+
+            tpl.querySelector('.item-index').textContent = index;
+            tpl.querySelector('.item-name').value = name;
+            tpl.querySelector('.item-amount').value = amount;
+
+            tpl.querySelector('.delete-item-btn').onclick = e => {
+                e.target.closest('.item-row').remove();
+                updateIndices();
+                calculateTotal();
+            };
+
+            tpl.querySelector('.item-amount').oninput = calculateTotal;
+            itemsContainer.appendChild(tpl);
+        }
+
+        function updateIndices() {
+            document.querySelectorAll('.item-row').forEach((row, i) => {
+                row.querySelector('.item-index').textContent = i + 1;
+            });
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('.item-amount').forEach(i => {
+                total += parseFloat(i.value) || 0;
+            });
+            document.getElementById('itemized-total').textContent = total.toFixed(2);
+            document.getElementById('amount').value = total.toFixed(2);
+        }
+
+        addItemBtn.onclick = () => createItemRow();
+
+        if (existingItems.length) {
+            existingItems.forEach(i => createItemRow(i.name, i.amount));
+            calculateTotal();
+        }
+    });
+
+    function prepareSubmit(e) {
+        if (document.getElementById('split_type').value !== 'itemized') return;
+
+        const items = [];
+        document.querySelectorAll('.item-row').forEach(row => {
+            const name = row.querySelector('.item-name').value;
+            const amount = parseFloat(row.querySelector('.item-amount').value);
+            const users = [...row.querySelectorAll('.item-user-check:checked')]
+                .map(u => parseInt(u.value));
+
+            if (!name || isNaN(amount) || users.length === 0) {
+                e.preventDefault();
+                alert("Fill all item details and select users.");
+                return;
+            }
+
+            items.push({ name, amount, user_ids: users });
+        });
+
+        document.getElementById('items_data').value = JSON.stringify(items);
+    }
+</script>
 {% endblock %}
