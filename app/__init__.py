@@ -4,6 +4,7 @@ from config import Config
 from app.models.user import User
 from app.models.expense import Expense
 from app.models.expense_split import ExpenseSplit
+from app.models.expense_item import ExpenseItem
 
 def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")

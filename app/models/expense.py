@@ -26,5 +26,7 @@ class Expense(db.Model):
     )
 
     # relationship defined on User side (expenses_paid)
+    items = db.relationship("ExpenseItem", back_populates="expense", cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<Expense {self.id} Amount={self.amount}>"

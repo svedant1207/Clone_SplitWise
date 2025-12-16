@@ -1,5 +1,6 @@
 from app.extensions import db
 from app.models.expense_split import ExpenseSplit
+from app.models.expense_item import ExpenseItem
 
 
 class SplitService:
@@ -23,7 +24,7 @@ class SplitService:
             splits.append(split)
 
         db.session.add_all(splits)
-        db.session.commit()
+        # Service methods should not commit
         return splits
 
     @staticmethod
@@ -46,7 +47,7 @@ class SplitService:
             splits.append(split)
 
         db.session.add_all(splits)
-        db.session.commit()
+        # Service methods should not commit
         return splits
 
     @staticmethod
@@ -70,5 +71,53 @@ class SplitService:
             splits.append(split)
 
         db.session.add_all(splits)
-        db.session.commit()
+        # Service methods should not commit
+        return splits
+
+    @staticmethod
+    def split_itemized(expense, items_data):
+        """
+        Split expense based on items.
+        items_data: list of dicts {name, amount, user_ids}
+        """
+        total_amount = sum(item['amount'] for item in items_data)
+        
+        # Verify total matches expense amount (allowing small float diff?)
+        if abs(total_amount - expense.amount) > 0.01:
+             raise ValueError(f"Sum of items ({total_amount}) does not match expense amount ({expense.amount})")
+
+        splits_map = {} # user_id -> amount
+
+        expense_items = []
+        for item_data in items_data:
+            # Create ExpenseItem
+            expense_item = ExpenseItem(
+                expense_id=expense.id,
+                name=item_data['name'],
+                amount=item_data['amount']
+            )
+            expense_items.append(expense_item)
+
+            # Calculate split for this item
+            user_ids = item_data['user_ids']
+            if not user_ids:
+                continue
+                
+            per_user = item_data['amount'] / len(user_ids)
+            for uid in user_ids:
+                splits_map[uid] = splits_map.get(uid, 0) + per_user
+
+        db.session.add_all(expense_items)
+
+        # Create ExpenseSplits
+        splits = []
+        for user_id, amount in splits_map.items():
+            split = ExpenseSplit(
+                expense_id=expense.id,
+                user_id=user_id,
+                amount=round(amount, 2)
+            )
+            splits.append(split)
+        
+        db.session.add_all(splits)
         return splits

@@ -3,49 +3,267 @@
 {% block title %}Add Expense{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 600px; margin: 0 auto;">
+<div class="card" style="max-width: 800px; margin: 0 auto;">
     <h2 class="mb-4">Add an expense</h2>
 
-    <form action="{{ url_for('expenses.add_expense') }}" method="POST">
+    <form action="{{ url_for('expenses.add_expense') }}" method="POST" id="expenseForm">
         <div class="form-group">
             <label for="title" class="form-label">Description</label>
             <input type="text" id="title" name="description" class="form-control" required
                 placeholder="e.g. Dinner at Tokyo Diner">
         </div>
 
-        <div class="form-group">
-            <label for="amount" class="form-label">Amount</label>
-            <div class="input-wrapper" style="position: relative;">
-                <span style="position: absolute; left: 1rem; top: 0.75rem; color: var(--text-muted);">$</span>
-                <input type="number" step="0.01" id="amount" name="amount" class="form-control"
-                    style="padding-left: 2rem;" required placeholder="0.00">
+        <div class="form-group mb-4">
+            <label class="form-label d-block">Split Mode</label>
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="split_type_radio" id="split_equal" value="equal" checked>
+                <label class="btn btn-outline-primary" for="split_equal">Split Equally</label>
+
+                <input type="radio" class="btn-check" name="split_type_radio" id="split_itemized" value="itemized">
+                <label class="btn btn-outline-primary" for="split_itemized">Itemized Split</label>
+            </div>
+            <input type="hidden" name="split_type" id="split_type" value="equal">
+        </div>
+
+        <div id="equal-split-section">
+            <div class="form-group">
+                <label for="amount" class="form-label">Amount</label>
+                <div class="input-wrapper" style="position: relative;">
+                    <span style="position: absolute; left: 1rem; top: 0.75rem; color: var(--text-muted);">$</span>
+                    <input type="number" step="0.01" id="amount" name="amount" class="form-control"
+                        style="padding-left: 2rem;" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Split with</label>
+                <div class="friend-selection"
+                    style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px;">
+                    {% if friends %}
+                    {% for friend in friends %}
+                    <div class="form-check" style="margin-bottom: 0.5rem;">
+                        <input class="form-check-input" type="checkbox" name="friend_ids" value="{{ friend.id }}"
+                            id="friend_{{ friend.id }}">
+                        <label class="form-check-label" for="friend_{{ friend.id }}">
+                            {{ friend.name }} ({{ friend.email }})
+                        </label>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted small mb-0">No friends found. Add friends first!</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
-        <div class="form-group">
-            <label class="form-label">Split with</label>
-            <div class="friend-selection"
-                style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px;">
-                {% if friends %}
-                {% for friend in friends %}
-                <div class="form-check" style="margin-bottom: 0.5rem;">
-                    <input class="form-check-input" type="checkbox" name="friend_ids" value="{{ friend.id }}"
-                        id="friend_{{ friend.id }}">
-                    <label class="form-check-label" for="friend_{{ friend.id }}">
-                        {{ friend.name }} ({{ friend.email }})
-                    </label>
-                </div>
-                {% endfor %}
-                {% else %}
-                <p class="text-muted small mb-0">No friends found. Add friends first!</p>
-                {% endif %}
+        <div id="itemized-split-section" style="display: none;">
+            <label class="form-label">Items</label>
+            <div id="items-container" class="mb-3">
+                <!-- Items will be added here -->
             </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="add-item-btn">
+                <i class="fa-solid fa-plus"></i> Add Item
+            </button>
+
+            <div class="total-display p-3 bg-light rounded mb-3">
+                <strong>Total Amount: $<span id="itemized-total">0.00</span></strong>
+            </div>
+
+            <input type="hidden" name="items_data" id="items_data">
         </div>
 
         <div class="flex gap-4 mt-4">
-            <button type="submit" class="btn btn-primary">Save Expense</button>
+            <button type="submit" class="btn btn-primary" id="submit-btn" onclick="prepareSubmit(event)">Save
+                Expense</button>
             <a href="{{ url_for('auth.dashboard') }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>
+
+<!-- Template placed outside form -->
+<template id="item-row-template">
+    <div class="item-row card p-3 mb-2" style="border: 1px solid #eee;">
+        <div class="flex justify-between mb-2">
+            <h6 class="mb-0">Item #<span class="item-index"></span></h6>
+            <button type="button" class="btn btn-link text-danger p-0 delete-item-btn"><i
+                    class="fa-solid fa-trash"></i></button>
+        </div>
+        <div class="row g-2">
+            <div class="col-md-6">
+                <input type="text" class="form-control item-name" placeholder="Item Name (e.g. Pizza)" required>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" step="0.01" class="form-control item-amount" placeholder="0.00" required>
+                </div>
+            </div>
+        </div>
+        <div class="mt-2">
+            <label class="small text-muted">Shared by:</label>
+            <div class="d-flex flex-wrap gap-2 item-users">
+                {% for friend in friends %}
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input item-user-check" type="checkbox" value="{{ friend.id }}"
+                        id="item_user_{{ friend.id }}_idx">
+                    <label class="form-check-label small" for="item_user_{{ friend.id }}_idx">{{ friend.name }}</label>
+                </div>
+                {% endfor %}
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input item-user-check" type="checkbox" value="{{ current_user.id }}"
+                        id="item_user_self_idx" checked>
+                    <label class="form-check-label small" for="item_user_self_idx">Me</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const splitRadios = document.querySelectorAll('input[name="split_type_radio"]');
+        const equalSection = document.getElementById('equal-split-section');
+        const itemizedSection = document.getElementById('itemized-split-section');
+        const splitTypeInput = document.getElementById('split_type');
+        const amountInput = document.getElementById('amount');
+        const addItemBtn = document.getElementById('add-item-btn');
+
+        // Toggle Sections
+        splitRadios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                if (this.value === 'equal') {
+                    if (equalSection) equalSection.style.display = 'block';
+                    if (itemizedSection) itemizedSection.style.display = 'none';
+                    if (splitTypeInput) splitTypeInput.value = 'equal';
+                    if (amountInput) {
+                        amountInput.required = true;
+                        amountInput.readOnly = false;
+                    }
+                } else {
+                    if (equalSection) equalSection.style.display = 'none';
+                    if (itemizedSection) itemizedSection.style.display = 'block';
+                    if (splitTypeInput) splitTypeInput.value = 'itemized';
+                    if (amountInput) {
+                        amountInput.required = false;
+                        amountInput.readOnly = true;
+                    }
+                    calculateItemizedTotal();
+
+                    // Add initial item if empty
+                    const itemsContainer = document.getElementById('items-container');
+                    if (itemsContainer && itemsContainer.children.length === 0) {
+                        if (addItemBtn) addItemBtn.click();
+                    }
+                }
+            });
+        });
+
+        // Add Item Logic
+        const itemsContainer = document.getElementById('items-container');
+        let itemCount = 0;
+
+        if (addItemBtn) {
+            addItemBtn.addEventListener('click', function () {
+                itemCount++;
+                const template = document.getElementById('item-row-template');
+                if (!template) {
+                    console.error("Template 'item-row-template' not found");
+                    return;
+                }
+
+                const clone = template.content.cloneNode(true);
+
+                clone.querySelector('.item-index').textContent = itemCount;
+
+                // Fix IDs
+                const checks = clone.querySelectorAll('.item-user-check');
+                for (let i = 0; i < checks.length; i++) {
+                    const chk = checks[i];
+                    const oldId = chk.getAttribute('id');
+                    const newId = oldId.replace('_idx', '_' + itemCount);
+                    chk.setAttribute('id', newId);
+                    const label = chk.nextElementSibling;
+                    if (label) label.setAttribute('for', newId);
+                }
+
+                const deleteBtn = clone.querySelector('.delete-item-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function (e) {
+                        const row = e.target.closest('.item-row');
+                        if (row) row.remove();
+                        calculateItemizedTotal();
+                    });
+                }
+
+                const amountInp = clone.querySelector('.item-amount');
+                if (amountInp) {
+                    amountInp.addEventListener('input', calculateItemizedTotal);
+                }
+
+                if (itemsContainer) itemsContainer.appendChild(clone);
+            });
+        }
+    });
+
+    function calculateItemizedTotal() {
+        let total = 0;
+        document.querySelectorAll('.item-amount').forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        const totalSpan = document.getElementById('itemized-total');
+        if (totalSpan) totalSpan.textContent = total.toFixed(2);
+
+        // Also update the main amount input if in itemized mode
+        const splitType = document.getElementById('split_type');
+        if (splitType && splitType.value === 'itemized') {
+            const amtInput = document.getElementById('amount');
+            if (amtInput) amtInput.value = total.toFixed(2);
+        }
+    }
+
+    window.prepareSubmit = function (event) {
+        if (document.getElementById('split_type').value === 'itemized') {
+            const items = [];
+            const rows = document.querySelectorAll('.item-row');
+            let valid = true;
+
+            rows.forEach(row => {
+                const nameInput = row.querySelector('.item-name');
+                const amountInput = row.querySelector('.item-amount');
+
+                const name = nameInput ? nameInput.value : '';
+                const amount = amountInput ? parseFloat(amountInput.value) : 0;
+
+                const userChecks = row.querySelectorAll('.item-user-check:checked');
+                const userIds = Array.from(userChecks).map(cb => parseInt(cb.value));
+
+                if (!name || isNaN(amount) || userIds.length === 0) {
+                    valid = false;
+                }
+
+                items.push({
+                    name: name,
+                    amount: amount,
+                    user_ids: userIds
+                });
+            });
+
+            if (rows.length === 0) {
+                alert("Please add at least one item.");
+                event.preventDefault();
+                return;
+            }
+
+            if (!valid) {
+                alert("Please fill in all item details and select at least one person per item.");
+                event.preventDefault();
+                return;
+            }
+
+            document.getElementById('items_data').value = JSON.stringify(items);
+        }
+    }
+</script>
 {% endblock %}
