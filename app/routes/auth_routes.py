@@ -69,29 +69,34 @@ def dashboard():
         .all()
     )
 
-    # Get balances for all users
+    # Get balances for all users (for Total Net Balance)
     balances = BalanceService.user_balances()
 
     # Current user's net balance
     total_balance = balances.get(current_user.id, 0.0)
 
-    # Calculate owes / owed
+    # Calculate owes / owed using Pairwise Debts (Exact relationships)
+    pairwise_debts = BalanceService.user_pairwise_debts()
+    
     you_owe = 0.0
     you_are_owed = 0.0
     owe_users = set()
     owed_by_users = set()
 
-    for user_id, amount in balances.items():
-        if user_id == current_user.id:
-            continue
+    # 1. Total I owe (I am the debtor)
+    if current_user.id in pairwise_debts:
+        for creditor_id, amount in pairwise_debts[current_user.id].items():
+            if amount > 0:
+                you_owe += amount
+                owe_users.add(creditor_id)
 
-        if amount < 0 and total_balance > 0:
-            you_are_owed += abs(amount)
-            owed_by_users.add(user_id)
-
-        elif amount > 0 and total_balance < 0:
-            you_owe += amount
-            owe_users.add(user_id)
+    # 2. Total owed to me (I am the creditor)
+    for debtor_id, debts in pairwise_debts.items():
+        if current_user.id in debts:
+            amount = debts[current_user.id]
+            if amount > 0:
+                you_are_owed += amount
+                owed_by_users.add(debtor_id)
 
     return render_template(
         "dashboard.html",

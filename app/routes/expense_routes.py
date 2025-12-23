@@ -24,24 +24,31 @@ def list_expenses():
 @login_required
 def add_expense():
     if request.method == "POST":
-        description = request.form["description"]
-        amount = float(request.form["amount"])
-        split_type = request.form.get("split_type", "equal")
-        
-        expense = Expense(
-            amount=amount,
-            description=description,
-            paid_by_id=current_user.id
-        )
-        db.session.add(expense)
-        # We need to flush to assign an ID to expense before creating items/splits
-        db.session.flush() 
-        
         try:
+            description = request.form["description"]
+            amount_str = request.form["amount"]
+            if not amount_str:
+                raise ValueError("Amount is required")
+            try:
+                amount = float(amount_str)
+            except ValueError:
+                raise ValueError("Invalid amount format")
+
+            split_type = request.form.get("split_type", "equal")
+            
+            expense = Expense(
+                amount=amount,
+                description=description,
+                paid_by_id=current_user.id
+            )
+            db.session.add(expense)
+            # We need to flush to assign an ID to expense before creating items/splits
+            db.session.flush() 
+            
             if split_type == "itemized":
                 items_json = request.form.get("items_data")
                 if not items_json:
-                     raise ValueError("No items data provided for itemized split")
+                        raise ValueError("No items data provided for itemized split")
                 items_data = json.loads(items_json)
                 SplitService.split_itemized(expense, items_data)
                 flash("Itemized expense added successfully!")
