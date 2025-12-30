@@ -1,95 +1,119 @@
 # 🧾 Clone SplitWise 💸
 
-A Splitwise-like expense sharing backend application built with Flask. This project allows users to manage shared expenses, split costs in various ways, and settle up balances.
+A Splitwise-like expense sharing backend application built with Flask. This project allows users to manage shared expenses, split costs in various ways, and settle up balances. It is designed to be easy to deploy using Docker.
 
 -----
 
 ### 🛠 Tech Stack
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
-![Pytest](https://img.shields.io/badge/Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![Gunicorn](https://img.shields.io/badge/Gunicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white)
 
 -----
 
 ### 🚀 Features
 
-*   **👤 User Management**: Register and authenticate users.
-*   **💸 Expense Creation**: Add expenses paid by a specific user.
+*   **👤 User Management**: Register and authenticate users securely (Flask-Login).
+*   **💸 Expense Tracking**: Record expenses paid by specific users.
 *   **➗ Flexible Splitting**: Support for Equal, Exact, and Percentage based splits.
-*   **📊 Balance Calculation**: Automatically calculate how much each user owes or is owed.
-*   **🔄 Settlement Logic**: Efficiently settle debts between users.
+*   **📊 Balance Calculation**: Real-time calculation of debts and receivables.
+*   **🔄 Settlement**: Logic to settle debts between users efficiently.
+*   **🐳 Containerized**: Fully containerized with Docker and Docker Compose for easy deployment.
 *   **🧪 Tested**: Comprehensive unit tests using Pytest.
-*   **🔐 Authentication**: Simple login/logout implementation.
 
 -----
 
 ### ⚙️ Setup & Installation
 
-Follow these steps to get the project running locally on your machine.
+You can run this project either using **Docker (Recommended)** or locally with a virtual environment.
 
-#### 1. Clone & Environment Setup
+#### Option 1: Docker (Recommended)
 
-```bash
-# Create a virtual environment
-python -m venv venv
+Ensure you have [Docker](https://www.docker.com/products/docker-desktop) and Docker Compose installed.
 
-# Activate the virtual environment
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-# venv\Scripts\activate
-```
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/svedant1207/Clone_SplitWise
+    cd Clone_SplitWise
+    ```
 
-#### 2. Install Dependencies
+2.  **Create Environment File**:
+    Copy the example environment file:
+    ```bash
+    cp .env.example .env
+    ```
+    *   *Optional*: Edit `.env` to change `SECRET_KEY` or `GUNICORN_WORKERS`.
 
-```bash
-pip install -r requirements.txt
-```
+3.  **Run with Docker Compose**:
+    ```bash
+    docker-compose up --build
+    ```
+    *   The app will be available at `http://localhost:80`.
+    *   **Nginx** acts as a reverse proxy sitting in front of the **Gunicorn** application server.
+    *   Database initialization and seeding happen automatically on the first run via `entrypoint.sh`.
 
-#### 3. Database Initialization
+4.  **Stop the Application**:
+    ```bash
+    docker-compose down
+    ```
 
-You need to initialize the SQLite database before running the app.
+#### Option 2: Local Development
 
-```bash
-# Initialize the database (creates splitwise.db and tables)
-python scripts/init_db.py
+1.  **Create a virtual environment**:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
 
-# Optional: Seed the database with sample data (Users A, B, C)
-python scripts/seed_db.py
-```
+2.  **Install dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-> **Note:** If you need to wipe the database and start fresh, you can run:
-> ```bash
-> python scripts/reset_db.py
-> ```
+3.  **Initialize the Database**:
+    ```bash
+    python scripts/init_db.py
+    python scripts/seed_db.py  # Optional: Adds dummy users A, B, C
+    ```
 
-#### 4. Run the Application
+4.  **Run the Application**:
+    ```bash
+    flask run
+    ```
+    The server will start at `http://127.0.0.1:5000`.
 
-```bash
-flask run
-```
-
-The server will start at `http://127.0.0.1:5000`.
-
-#### 5. Run Tests
-
-To ensure everything is working correctly, run the test suite:
-
-```bash
-pytest
-```
+5.  **Run Tests**:
+    ```bash
+    pytest
+    ```
 
 -----
 
-### 💡 API Usage & Quick Start
+### 💡 API Usage
 
-The API is fully functional. You can interact with it using tools like **Postman** or **Insomnia**.
+**Base URL**: `http://localhost:80` (Docker) or `http://localhost:5000` (Local)
 
-#### 1. Initial Users (from Seed)
+#### Key Endpoints
 
-If you ran `python scripts/seed_db.py`, the following users are available:
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/` | Health check / Welcome message |
+| **POST** | `/auth/register` | Register a new user |
+| **POST** | `/auth/login` | Login user |
+| **POST** | `/expenses` | Create a new expense |
+| **POST** | `/expenses/<id>/split/equal` | Split expense equally |
+| **POST** | `/expenses/<id>/split/exact` | Split expense by exact amounts |
+| **POST** | `/expenses/<id>/split/percent` | Split expense by percentage |
+| **GET** | `/balances` | Get current user balances |
+| **GET** | `/settle` | Settle up debts |
+
+#### Test Users (from Seed)
+
+If you ran `python scripts/seed_db.py` (or used the Docker setup), these users are pre-populated:
 
 | ID | Name | Email | Password |
 | :--- | :--- | :--- | :--- |
@@ -97,29 +121,13 @@ If you ran `python scripts/seed_db.py`, the following users are available:
 | **2** | User B | `b@test.com` | `pass` |
 | **3** | User C | `c@test.com` | `pass` |
 
-#### 2. key Endpoints
-
-Here are some of the primary endpoints you can use:
-
-*   **Health Check**: `GET /`
-*   **Create Expense**: `POST /expenses`
-    *   Requires `paid_by_id` (User ID).
-*   **Split Expense**:
-    *   `POST /expenses/<expense_id>/split/equal`
-    *   `POST /expenses/<expense_id>/split/exact`
-    *   `POST /expenses/<expense_id>/split/percent`
-*   **Get Balances**: `GET /balances`
-*   **Settle Up**: `GET /settle`
-
-#### 3. Example Request (Create User)
-
-**POST** `/auth/register` (or appropriate route depending on implementation)
-
+#### Example: Create Expense
 ```json
+POST /expenses
 {
-  "email": "newuser@test.com",
-  "name": "New User",
-  "password": "password123"
+  "description": "Lunch",
+  "amount": 100.0,
+  "paid_by_id": 1
 }
 ```
 
@@ -130,15 +138,18 @@ Here are some of the primary endpoints you can use:
 ```
 Clone_SplitWise/
 ├── app/
-│   ├── models/         # Database models
-│   ├── routes/         # API routes (Blueprints)
-│   ├── templates/      # HTML templates
-│   └── __init__.py     # App factory
+│   ├── models/         # SQLAlchemy Database models
+│   ├── routes/         # Flask Blueprints (API endpoints)
+│   ├── templates/      # Jinja2 templates (if applicable)
+│   └── __init__.py     # App factory & extension init
 ├── scripts/
-│   ├── init_db.py      # Create DB tables
-│   ├── seed_db.py      # Populate DB with dummy data
-│   └── reset_db.py     # Reset DB
-├── tests/              # Pytest tests
+│   ├── init_db.py      # Script to create tables
+│   ├── seed_db.py      # Script to seed dummy data
+│   └── reset_db.py     # Script to reset DB
+├── tests/              # Pytest suite
+├── Dockerfile          # Docker image definition
+├── docker-compose.yml  # Docker services config (Web + Nginx)
+├── nginx.conf          # Nginx configuration
 ├── requirements.txt    # Python dependencies
-└── run.py              # Entry point
+└── run.py              # Application entry point
 ```
